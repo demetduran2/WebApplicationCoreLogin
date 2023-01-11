@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using WebApplicationCoreLogin.Models;
 
 namespace WebApplicationCoreLogin
@@ -16,6 +18,17 @@ namespace WebApplicationCoreLogin
             { 
                 o.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
             });
+            builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(o =>
+            {
+                o.Cookie.Name = "AuthCookie";
+                o.ExpireTimeSpan = TimeSpan.FromDays(1);
+                o.SlidingExpiration = false;
+                o.LoginPath = "/Account/Login";
+                o.LogoutPath = "/Account/Logout";
+                o.AccessDeniedPath = "/Home/AccessDenied";
+
+            });
+
                 var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -30,7 +43,7 @@ namespace WebApplicationCoreLogin
             app.UseStaticFiles();
 
             app.UseRouting();
-
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllerRoute(
