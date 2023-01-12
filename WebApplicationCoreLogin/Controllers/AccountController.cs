@@ -44,9 +44,9 @@ namespace WebApplicationCoreLogin.Controllers
                 if (user!=null)
                 {
                     List<Claim> claims = new List<Claim>();
-                    claims.Add(new Claim("Id", user.Id.ToString()));
+                    claims.Add(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));
                     claims.Add(new Claim(ClaimTypes.Role, user.Role));
-                    claims.Add(new Claim("Name", user.Name?? string.Empty));
+                    claims.Add(new Claim("Name", user.Name ?? string.Empty));
                     claims.Add(new Claim("UserName", user.UserName));
 
                     ClaimsIdentity claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -84,10 +84,11 @@ namespace WebApplicationCoreLogin.Controllers
                 sifre = model.Password + sifre;
                 string md5sifre = sifre.MD5();
                 
-                User user=new User()
+                User user=new /*User*/()
                 {
                     UserName=model.UserName,
                     Password=md5sifre,//md5 şifreleme ve çözme bak
+                    //Role="user"
                 };
                 db.Users.Add(user);
                 if (db.SaveChanges()==0)
@@ -104,7 +105,81 @@ namespace WebApplicationCoreLogin.Controllers
 
         public IActionResult Profil()
         {
+            ProfilBilgiGoster();
             return View();
+        }
+
+        private void ProfilBilgiGoster()
+        {
+            Guid id = new Guid(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            User user = db.Users.SingleOrDefault(x => x.Id == id);
+            ViewData["adsoyad"] = user.Name;
+            ViewData["username"] = user.UserName;
+            ViewData["password"] = user.Password;
+            ViewData["mesaj"] = TempData["mesaj"];
+        }
+
+        [HttpPost]
+        public IActionResult AdSoyadKaydet(string adsoyad)
+        {
+            if (ModelState.IsValid)
+            {
+                //ProfilBilgiGoster();
+                Guid id= new Guid(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                User user=db.Users.SingleOrDefault(x=>x.Id==id);
+                ViewData["adsoyad"]=user.Name;
+                
+
+                user.Name= adsoyad;
+                db.SaveChanges();
+                TempData["mesaj"] = "NameUpdate";
+                return RedirectToAction("Profil");
+            }           
+            return View("Profil");
+        }
+
+        [HttpPost]
+        public IActionResult UserNameSave(string username)
+        {
+            if (ModelState.IsValid)
+            {
+               
+                Guid id = new Guid(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                User user = db.Users.SingleOrDefault(x => x.Id == id);
+
+                if (db.Users.Any(x => x.UserName.ToLower() == username.ToLower() && x.Id!=id))
+                {
+                    ModelState.AddModelError("","Bu kullanıcı adı sistemde zaten kayıtlı");
+                    return View("Profil");
+                }
+
+                user.Name = username;
+                db.SaveChanges();
+
+                TempData["mesaj"] = "Kullanıcı adı değişti";
+
+                ProfilBilgiGoster();
+                return RedirectToAction("Profil");
+            }           
+            return View("Profil");
+        }
+
+        public IActionResult PasswordSave(string password)
+        {
+            if (ModelState.IsValid)
+            {
+                Guid id = new Guid(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                User user = db.Users.SingleOrDefault(x => x.Id == id);
+
+                string sifre = _configuration.GetValue<string>("Appsettings:sifre");
+                sifre = password + sifre;
+                string md5sifre = sifre.MD5();
+
+                user.Password=md5sifre;
+                db.SaveChanges();
+            }
+            ProfilBilgiGoster();
+            return View("Profil");
         }
 
         public IActionResult Logout()
