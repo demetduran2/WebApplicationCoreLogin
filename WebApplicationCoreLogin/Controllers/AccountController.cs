@@ -116,6 +116,7 @@ namespace WebApplicationCoreLogin.Controllers
             ViewData["adsoyad"] = user.Name;
             ViewData["username"] = user.UserName;
             ViewData["password"] = user.Password;
+            ViewData["image"] = user.ProfilResimDosyası;
             ViewData["mesaj"] = TempData["mesaj"];
         }
 
@@ -186,6 +187,29 @@ namespace WebApplicationCoreLogin.Controllers
         {
             HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Login");
+        }
+
+        public IActionResult ProfilResimKaydet(IFormFile resim)
+        {
+            if (ModelState.IsValid)
+            {
+                Guid id = new Guid(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                User user = db.Users.SingleOrDefault(x => x.Id == id);
+
+                //f_342334.jpg diye kaydetmesi için
+                string filename = $"resim_{id}.jpg";
+                Stream stream = new FileStream($"wwwroot/resim/{filename}", FileMode.OpenOrCreate);
+                resim.CopyTo(stream);
+                stream.Close();
+                stream.Dispose();
+
+                user.ProfilResimDosyası = filename;
+                db.SaveChanges();
+
+                return RedirectToAction("Profil");
+            }
+            
+            return View("Profil");
         }
     }
 }

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 using System.Security.Claims;
 using WebApplicationCoreLogin.Models;
 
@@ -13,11 +14,20 @@ namespace WebApplicationCoreLogin
 
             // Add services to the container.
             builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();//mvc yapýsý ve manage nuget packettekini bu projeye eklensin diye
+
+
             //builder.Services.AddDbContext<DatabaseContext>(o=>o.UseSqlServer("Server=203-BURAK\\NA;Database=MVCCore;Integrated Security=True"))
+
+
             builder.Services.AddDbContext<DatabaseContext>(o => 
             { 
                 o.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
             });
+
+
+            builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+
+
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(o =>
             {
                 o.Cookie.Name = "AuthCookie";

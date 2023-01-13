@@ -1,12 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace WebApplicationCoreLogin.Models
+namespace WebApplicationCoreLogin.Models.ViewModel
 {
-    [Table("User")]
-    public class User
+    public class UserViewModel
     {
-        [Key]
+        
         public Guid Id { get; set; }
 
         [StringLength(50)]
@@ -22,10 +20,7 @@ namespace WebApplicationCoreLogin.Models
 
         public bool Activate { get; set; } = false;
 
-        public DateTime CreatedDate { get; set; }=DateTime.Now;
-
-        [StringLength(255)]
-        public string ProfilResimDosyası { get; set; } = "user_1.jpg";
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
 
         [Required]
         [StringLength(50)]
